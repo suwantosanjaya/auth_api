@@ -2,7 +2,7 @@
 
 Kita lanjut menggunakan git pada Auth API dan mengunggahnya ke GitHub. Kita mulai dengan membuat remote repository baru pada GitHub.
 
-Silakan login GitHub menggunakan akun Anda dan buat repository baru dengan nama auth-api.
+Silakan login GitHub menggunakan akun Anda dan buat repository baru dengan nama auth_api.
 
 Setelah berhasil di buat maka akan muncul seperti berikut:
 
@@ -25,7 +25,10 @@ git push -u origin main
 ```
 
 Sekarang kita akan pasang git pada proyek Auth API untuk membuat local repository. Silakan buka kembali proyek Auth API pada VSCode. Kemudian pasang git pada proyek menggunakan perintah:
-> git init
+
+```bash
+git init
+```
 
 **Catatan**: Jika gagal, pastikan Anda sudah memasang git pada komputer.
 
@@ -40,7 +43,29 @@ config/database/test.json
 ```
 
 Setelah itu masukkan seluruh berkas (selain yang berada di .gitignore) ke stage change dan commit dengan pesan “initial commit” melalui kode berikut:
-```
+```bash
 git add .
 git commit -m "initial commit"
 ```
+
+Selanjutnya tambahkan remote repository yang sudah kita buat di GitHub pada local repository dengan perintah:
+
+```bash
+git remote add origin <remote repository URL>
+```
+
+Silakan ganti <remote repository URL> dengan URL url remote repository GitHub yang Anda miliki. Contoh:
+
+```bash
+git remote add origin https://github.com/https://github.com/suwantosanjaya/auth_api.git
+```
+
+Setelah itu, push branch master (branch utama) pada local repository ke remote repository dengan perintah:
+
+```bash
+git push origin master
+```
+
+Proses ini membutuhkan authorization pada akun GitHub. Untuk Linux dan macOS, Anda bisa menuliskan username dan password github secara langsung pada Terminal. Namun, jika menggunakan Windows, Anda bisa login melalui GitHub desktop.
+
+Silakan kembali ke halaman remote repository GitHub pada browser. Refresh halaman tersebut dan Anda akan melihat source code proyek di sana.
