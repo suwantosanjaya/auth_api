@@ -201,23 +201,62 @@ git checkout -b feature-say-hello-world
 
 **Catatan**: perintah tersebut digunakan untuk membuat sekaligus berpindah ke branch **feature-say-hello-world**.
 
-Hasilnya:
-
-
-
 Selanjutnya buat fitur say hello world pada Endpoint **GET** /. Seperti biasa, kita tulis testingnya terlebih dahulu. Tambahkan skenario testing pada kode yang diberi tanda tebal.
 
 - [createServer.test.js](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#tab2-code1)
 
-
-
+```javascript
+const pool = require('../../database/postgres/pool');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
+const injections = require('../../injections');
+const createServer = require('../createServer');
+ 
+describe('HTTP server', () => {
+  afterAll(async () => {
+    await pool.end();
+  });
+ 
+  afterEach(async () => {
+    await UsersTableTestHelper.cleanTable();
+    await AuthenticationsTableTestHelper.cleanTable();
+  });
+ 
+  it('should response 404 when request unregistered route', async () => {
+    // Arrange
+    const server = await createServer({});
+ 
+    // Action
+    const response = await server.inject({
+      method: 'GET',
+      url: '/unregisteredRoute',
+    });
+ 
+    // Assert
+    expect(response.statusCode).toEqual(404);
+  });
+ 
+  describe('when GET /', () => {
+    it('should return 200 and hello world', async () => {
+      // Arrange
+      const server = await createServer({});
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: '/',
+      });
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.value).toEqual('Hello world!');
+    });
+  });
+ 
+  // Skenario testing lain ...
+});
 ```
-const pool = require('../../database/postgres/pool');const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');const injections = require('../../injections');const createServer = require('../createServer'); describe('HTTP server', () => {  afterAll(async () => {    await pool.end();  });   afterEach(async () => {    await UsersTableTestHelper.cleanTable();    await AuthenticationsTableTestHelper.cleanTable();  });   it('should response 404 when request unregistered route', async () => {    // Arrange    const server = await createServer({});     // Action    const response = await server.inject({      method: 'GET',      url: '/unregisteredRoute',    });     // Assert    expect(response.statusCode).toEqual(404);  });   describe('when GET /', () => {    it('should return 200 and hello world', async () => {      // Arrange      const server = await createServer({});      // Action      const response = await server.inject({        method: 'GET',        url: '/',      });      // Assert      const responseJson = JSON.parse(response.payload);      expect(response.statusCode).toEqual(200);      expect(responseJson.value).toEqual('Hello world!');    });  });   // Skenario testing lain ...});
-```
 
-Jalankan testingnya dan hasilnya akan merah:
 
-[![202108072200233417857a0fab720a4d3a4cbff3220adc.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/202108072200233417857a0fab720a4d3a4cbff3220adc.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Sebelum memperbaiki pengujiannya, alangkah baiknya kita coba dulu pull request dengan skenario gagal seperti ini. Hal tersebut supaya kita mengetahui apa yang terjadi jika Anda atau anggota tim melakukan pull request dengan pengujian yang gagal.
 
@@ -225,47 +264,31 @@ Silakan commit dan push perubahan ke branch feature-say-hello-world ke remote re
 
 
 
-```
-git add .git commit -m "add say hello world test case"git push origin feature-say-hello-world 
+```bash
+git add .
+git commit -m "add say hello world test case"
+git push origin feature-say-hello-world 
 ```
 
-Hasilnya:
 
-[![202108072200248091d4ddd509f222cb8d2149a44c4ea6.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/202108072200248091d4ddd509f222cb8d2149a44c4ea6.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Sekarang kembali ke halaman GitHub repository Auth API Anda. Seharusnya terdapat branch baru yaitu feature-say-hello-world.
 
-[![20210807220206529fbfc7943e4e5042a201368d168c9e.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807220206529fbfc7943e4e5042a201368d168c9e.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
-
 Buat pull request dengan klik tombol **View all branches**.
-
-[![202108072202057bfd803c4b298191085d3f1b28d4fed3.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/202108072202057bfd803c4b298191085d3f1b28d4fed3.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Kemudian pada halaman daftar branches, buat pull request baru dengan klik tombol **New pull request** dari branch **feature-say-hello-world**.
 
-[![20210807220206b46d9c215c703b214012bee4a7cc2a3e.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807220206b46d9c215c703b214012bee4a7cc2a3e.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
-
 Secara default pull request akan dilakukan dari branch feature-say-hello-world ke branch master (utama).
 
-[![20210807220206366fbde85285f7fa631cbc6a3ba1966d.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807220206366fbde85285f7fa631cbc6a3ba1966d.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
-
 Biarkan konfigurasi tetap seperti default dan klik **Create pull request** untuk mulai membuat pull request.
-
-[![2021080722020655225d98b709e542adce4c00d7b1ed90.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/2021080722020655225d98b709e542adce4c00d7b1ed90.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Setelah pull request berhasil dibuat, maka actions CI akan berjalan seperti pada gambar di atas.
 
 Karena kita melakukan pull request dengan hasil pengujian yang gagal, maka CI pun akan memberitahukan bahwa proses pengujiannya gagal.
 
-[![20210807220204f8226d5d27f17c185c709054c1b5f899.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807220204f8226d5d27f17c185c709054c1b5f899.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
-
 Dari sini kita tahu bahwa kode yang di PR oleh Anda atau tim tidaklah benar. Detail kesalahan yang terjadi dapat dilihat dengan klik tautan **Details**.
 
-[![2021080722020652245622913b546dce0ced93b81f4f80.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/2021080722020652245622913b546dce0ced93b81f4f80.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
-
 Kembali ke halaman pull request. Karena proses pengujian pada CI gagal, reviewer bisa langsung close atau menolak pull request dengan klik tombol **Close pull request**.
-
-[![20210807220205ec26f05540b107f90483bc1e28dfdb5f.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807220205ec26f05540b107f90483bc1e28dfdb5f.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Sekarang, kita coba perbaiki dengan membuat pengujiannya hijau.
 
@@ -273,36 +296,94 @@ Silakan buka kembali VSCode dan buat pengujiannya menjadi hijau dengan menuliska
 
 - [createServer.js](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#tab3-code1)
 
-
-
-```
-const Hapi = require('@hapi/hapi');const ClientError = require('../../Commons/exceptions/ClientError');const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');const users = require('../../Interfaces/http/api/users');const authentications = require('../../Interfaces/http/api/authentications'); const createServer = async (injections) => {  const server = Hapi.server({    host: process.env.HOST,    port: process.env.PORT,  });   await server.register([    {      plugin: users,      options: { injections },    },    {      plugin: authentications,      options: { injections },    },  ]);   server.route({    method: 'GET',    path: '/',    handler: () => ({      value: 'Hello world!',    }),  });   server.ext('onPreResponse', (request, h) => {    // mendapatkan konteks response dari request    const { response } = request;     if (response instanceof Error) {      // bila response tersebut error, tangani sesuai kebutuhan      const translatedError = DomainErrorTranslator.translate(response);       // penanganan client error secara internal.      if (translatedError instanceof ClientError) {        const newResponse = h.response({          status: 'fail',          message: translatedError.message,        });        newResponse.code(translatedError.statusCode);        return newResponse;      }       // mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.      if (!translatedError.isServer) {        return h.continue;      }       // penanganan server error sesuai kebutuhan      const newResponse = h.response({        status: 'error',        message: 'terjadi kegagalan pada server kami',      });      newResponse.code(500);      return newResponse;    }     // jika bukan error, lanjutkan dengan response sebelumnya (tanpa terintervensi)    return h.continue;  });   return server;}; module.exports = createServer;
+```js
+const Hapi = require('@hapi/hapi');
+const ClientError = require('../../Commons/exceptions/ClientError');
+const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
+const users = require('../../Interfaces/http/api/users');
+const authentications = require('../../Interfaces/http/api/authentications');
+ 
+const createServer = async (injections) => {
+  const server = Hapi.server({
+    host: process.env.HOST,
+    port: process.env.PORT,
+  });
+ 
+  await server.register([
+    {
+      plugin: users,
+      options: { injections },
+    },
+    {
+      plugin: authentications,
+      options: { injections },
+    },
+  ]);
+ 
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      value: 'Hello world!',
+    }),
+  });
+ 
+  server.ext('onPreResponse', (request, h) => {
+    // mendapatkan konteks response dari request
+    const { response } = request;
+ 
+    if (response instanceof Error) {
+      // bila response tersebut error, tangani sesuai kebutuhan
+      const translatedError = DomainErrorTranslator.translate(response);
+ 
+      // penanganan client error secara internal.
+      if (translatedError instanceof ClientError) {
+        const newResponse = h.response({
+          status: 'fail',
+          message: translatedError.message,
+        });
+        newResponse.code(translatedError.statusCode);
+        return newResponse;
+      }
+ 
+      // mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.
+      if (!translatedError.isServer) {
+        return h.continue;
+      }
+ 
+      // penanganan server error sesuai kebutuhan
+      const newResponse = h.response({
+        status: 'error',
+        message: 'terjadi kegagalan pada server kami',
+      });
+      newResponse.code(500);
+      return newResponse;
+    }
+ 
+    // jika bukan error, lanjutkan dengan response sebelumnya (tanpa terintervensi)
+    return h.continue;
+  });
+ 
+  return server;
+};
 ```
 
 Jalankan testing dan hasilnya akan hijau:
 
-[![202108072213501646697b56983a8060c131a22cf81269.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/202108072213501646697b56983a8060c131a22cf81269.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
+
 
 Kita commit perubahan dan push kembali branch **feature-say-hello-world** ke remote repository menggunakan perintah:
 
-
-
+```js
+git add .
+git commit -m "pass say hello world test case"
+git push origin feature-say-hello-world
 ```
-git add .git commit -m "pass say hello world test case"git push origin feature-say-hello-world
-```
-
-Hasilnya:
-
-[![202108072213501b0c3055a7d97bfd7680d5790dcf3bf0.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/202108072213501b0c3055a7d97bfd7680d5790dcf3bf0.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Kembali ke GitHub Repository. Sekarang kita buat pull request lagi dengan cara yang sama yaitu *View all branches* -> *New pull request* pada branch *feature-say-hello-world*.
-
-[![2021080722135102a2641e22d549ff9f6d64207501494b.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/2021080722135102a2641e22d549ff9f6d64207501494b.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Klik **Create pull request** untuk mulai membuat pull request baru.
 
 Setelah pull request berhasil dibuat, tunggu proses CI hingga selesai dan lolos.
-
-[![20210807222049c3b4c5592f82b3303588c95a5dd1f12f.jpeg](https://d17ivq9b7rppb3.cloudfront.net/original/academy/20210807222049c3b4c5592f82b3303588c95a5dd1f12f.jpeg)](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#)
 
 Proses CI selesai dan lulus. Sehingga, reviewer bisa merge pull request dengan aman. Namun, sebelum melakukan merge pull request, kita buat dulu CD pipeline agar perubahan kode langsung bisa di-deploy secara otomatis ke server EC2.
