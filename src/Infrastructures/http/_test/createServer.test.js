@@ -1,5 +1,6 @@
 const pool = require('../../database/postgres/pool');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
 const container = require('../../container');
 const createServer = require('../createServer');
  
@@ -10,6 +11,7 @@ describe('HTTP server', () => {
  
   afterEach(async () => {
     await UsersTableTestHelper.cleanTable();
+    await AuthenticationsTableTestHelper.cleanTable();
   });
  
   it('should response 404 when request unregistered route', async () => {
@@ -24,6 +26,22 @@ describe('HTTP server', () => {
     expect(response.statusCode).toEqual(404);
   });
  
+  describe('when GET /', () => {
+    it('should return 200 and hello world', async () => {
+      // Arrange
+      const server = await createServer({});
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: '/',
+      });
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.value).toEqual('Hello world!');
+    });
+  });
+  
   describe('when POST /users', () => {
     it('should response 201 and persisted user', async () => {
       // Arrange
