@@ -69,3 +69,321 @@ git push origin master
 Proses ini membutuhkan authorization pada akun GitHub. Untuk Linux dan macOS, Anda bisa menuliskan username dan password github secara langsung pada Terminal. Namun, jika menggunakan Windows, Anda bisa login melalui GitHub desktop.
 
 Silakan kembali ke halaman remote repository GitHub pada browser. Refresh halaman tersebut dan Anda akan melihat source code proyek di sana.
+
+
+
+## Membuat CI Pipeline menggunakan GitHub Action
+
+Mari kita membuat CI Pipeline menggunakan GitHub Action terlebih dahulu. Caranya yaitu dengan membuat berkas .yml di dalam folder `.github/workflows` repository. Dalam berkas tersebut, definisikan kebutuhan dan juga alur kerja (workflow) untuk menjalankan sebuah aksi. Satu berkas .yml akan dibaca sebagai satu buah aksi.
+
+Silakan buka kembali proyek Auth API dan buat berkas baru bernama `ci.yml` pada folder `.github/workflows` **(buat folder baru)**.
+
+Di dalamnya, tulis kode berikut:
+
+- [ci.yml](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#tab1-code1)
+
+```yaml
+name: Continuous Integration 
+on:   pull_request:    
+	branches:      
+		- master 
+
+jobs:  
+	test:   
+    	runs-on: ubuntu-latest
+    	
+    	strategy:
+    		matrix:
+    			node-version: [14.x]        
+    			# See supported Node.js release schedule at https://nodejs.org/en/about/releases/     
+    	
+    	steps:    
+    		- uses: actions/checkout@v2    
+    		- name: Use Node.js ${{ matrix.node-version }}      
+    		  uses: actions/setup-node@v2      
+    		  with:        
+    		  	node-version: ${{ matrix.node-version }}    
+    		 - name: npm install migrate and test      
+    		   run: |        
+    		   	npm install        
+    		   	npm run migrate up        
+    		   	npm run test      
+    		   env:        
+    		   	CI: true        
+    		   	PGHOST_TEST: ${{ secrets.PGHOST_TEST }}        
+    		   	PGUSER_TEST: ${{ secrets.PGUSER_TEST }}        
+    		   	PGDATABASE_TEST: ${{ secrets.PGDATABASE_TEST }}        
+    		   	PGPASSWORD_TEST: ${{ secrets.PGPASSWORD_TEST }}        
+    		   	PGPORT_TEST: ${{ secrets.PGPORT_TEST }}        
+    		   	PGHOST: ${{ secrets.PGHOST_TEST }}        
+    		   	PGUSER: ${{ secrets.PGUSER_TEST }}        
+    		   	PGDATABASE: ${{ secrets.PGDATABASE_TEST }}        
+    		   	PGPASSWORD: ${{ secrets.PGPASSWORD_TEST }}        
+    		   	PGPORT: ${{ secrets.PGPORT_TEST }}        
+    		   	ACCESS_TOKEN_KEY: ${{ secrets.ACCESS_TOKEN_KEY }}        
+    		   	REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
+```
+
+> **Catatan:**
+> Pastikan spasi dan tab sama dengan yang ada di modul karena dalam bahasa YAML hal ini sangat berpengaruh. Jika Anda belum familier dengan bahasa YAML, silakan pelajari secara singkat pada tautan berikut: [Learn yaml in Y Minutes](https://learnxinyminutes.com/docs/yaml/).
+
+
+
+GitHub Actions (dan kebanyakan tools CI lainnya) menggunakan format YAML untuk mendefinisikan alur dari sebuah actions. Format YAML cocok untuk digunakan karena alur kerja yang didefinisikan relatif mudah untuk dibaca.
+
+Kami tidak akan menjelaskan secara detail bagaimana kode GitHub Actions ditulis, tetapi hanya bagian-bagian penting saja. Pada bagian terluar berkas `ci.yml` terdapat properti **name**, **on**, dan **jobs**. Berikut penjelasan dari masing-masing properti tersebut:
+
+- **name**: merupakan nama dari actions. Karena ini CI pipeline, maka namanya adalah Continuous Integrations.
+- **on**: merupakan event trigger atau event yang dapat men-trigger kapan actions harus berjalan. Di properti ini, kita mendefinisikan **pull_request** pada branch **master** sebagai event trigger.
+- **jobs**: merupakan properti yang mendefinisikan pekerjaan yang dilakukan ketika event trigger dibangkitkan. Satu GitHub Actions dapat terdiri dari beberapa jobs. Namun pada contoh kali ini, kita hanya mendefinisikan satu jobs yaitu **test**. Di dalam job test kita definisikan alur dan cara kerjanya, seperti mendefinisikan plugin yang digunakan, scripts yang perlu dijalankan, dan menetapkan nilai-nilai environment yang diperlukan.
+
+Anda juga mungkin menyadari beberapa nilai environment dituliskan dengan memanfaatkan nilai dari properti milik secrets. Yups, nantinya seluruh nilai environment akan kita simpan pada *repository secrets*.
+
+Bila Anda ingin mengetahui lebih dalam bagaimana menuliskan workflow pada GitHub Actions, kami sangat merekomendasikan untuk membaca dokumentasi yang diberikan langsung oleh GitHub mengenai [GitHub Actions](https://docs.github.com/en/actions). Oke, mari kita lanjutkan.
+
+Simpan perubahan pada berkas tersebut, kemudian commit dan push perubahannya dengan perintah:
+
+```bash
+git add .
+git commit -m "add ci action"
+git push origin master
+```
+
+Setelah berhasil push maka repository GitHub auth-api sudah memiliki actions CI yang ter-trigger bila ada pull request pada branch master.
+
+Sebelum mencoba pull request, kita perlu menyiapkan environment variable yang dibutuhkan oleh proses CI terlebih dahulu. Karena nilai environment variable tersebut bersifat rahasia atau sensitif, maka simpan nilainya pada repository secrets.
+
+Silakan buka halaman repository GitHub proyek Auth API Anda. Kemudian klik tab **Settings**.
+
+Kemudian pilih menu **Secrets** pada panel samping kiri halaman setting.
+
+Setelah itu klik tombol **New repository secret** untuk membuat repository secret baru.
+
+Selanjutnya Anda akan diarahkan ke halaman input secret.
+
+Pada kolom input **Name** isi dengan nama environment variable. Kemudian untuk input Value, isi dengan nilai environment variable. Contoh name **PGHOST_TEST** dengan nilai **auth-api.csadc8kpllpa.ap-southeast-1.rds.amazonaws.com** (sesuaikan dengan host/endpoint RDS server Anda):
+
+Untuk menambah dan menyimpan nilai secrets, silakan klik tombol **Add secret**.
+
+Pastikan nilai secrets yang baru saja kita tambahkan muncul pada Repository secrets.
+
+
+
+Silakan tambahkan repository secret lain dengan nilai-nilai berikut:
+
+- PGUSER_TEST: **postgres** (sesuaikan dengan kredensial Anda)
+- PGPASSWORD_TEST: **supersecret** (sesuaikan dengan kredensial Anda)
+- PGDATABASE_TEST: **authapi_test**
+- PGPORT_TEST: **5432**
+- PGHOST: **auth-api.csadc8kpllpa.ap-southeast-1.rds.amazonaws.com** (sesuaikan dengan host/endpoint RDS server Anda)
+- PGUSER: **postgres** (sesuaikan dengan kredensial Anda)
+- PGDATABASE: **authapi_test**
+- PGPASSWORD: **supersecret** (sesuaikan dengan kredensial Anda)
+- PGPORT: **5**432
+- ACCESS_TOKEN_KEY: (access token key Anda)
+- REFRESH_TOKEN_KEY: (refresh token key Anda)
+
+**Catatan:** Untuk nilai **PGDATABASE**, tetap gunakan database testing (**authapi_test**). Hal tersebut karena sejatinya proses CI tidak perlu bersentuhan dengan database production. Nilai **PGDATABASE** pada proses CI digunakan dalam proses migration database menggunakan perintah **npm run migrate**.
+
+
+
+Sekarang, kita bisa coba trigger CI dengan membuat pull request ke branch master. Caranya:
+
+- Buat branch baru di lokal repository,
+- Push branch baru ke remote repository.
+- Pull request branch baru ke branch master.
+
+Yuk kita mulai. Silakan buka kembali proyek Auth API pada VSCode dan anggaplah kita membuat fitur baru yakni “say hello world”. Jadi, buat branch baru dengan nama “feature-say-hello-world” dengan perintah berikut:
+
+```bash
+git checkout -b feature-say-hello-world
+```
+
+**Catatan**: perintah tersebut digunakan untuk membuat sekaligus berpindah ke branch **feature-say-hello-world**.
+
+Selanjutnya buat fitur say hello world pada Endpoint **GET** /. Seperti biasa, kita tulis testingnya terlebih dahulu. Tambahkan skenario testing pada kode yang diberi tanda tebal.
+
+- [createServer.test.js](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#tab2-code1)
+
+```javascript
+const pool = require('../../database/postgres/pool');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
+const injections = require('../../injections');
+const createServer = require('../createServer');
+ 
+describe('HTTP server', () => {
+  afterAll(async () => {
+    await pool.end();
+  });
+ 
+  afterEach(async () => {
+    await UsersTableTestHelper.cleanTable();
+    await AuthenticationsTableTestHelper.cleanTable();
+  });
+ 
+  it('should response 404 when request unregistered route', async () => {
+    // Arrange
+    const server = await createServer({});
+ 
+    // Action
+    const response = await server.inject({
+      method: 'GET',
+      url: '/unregisteredRoute',
+    });
+ 
+    // Assert
+    expect(response.statusCode).toEqual(404);
+  });
+ 
+  describe('when GET /', () => {
+    it('should return 200 and hello world', async () => {
+      // Arrange
+      const server = await createServer({});
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: '/',
+      });
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.value).toEqual('Hello world!');
+    });
+  });
+ 
+  // Skenario testing lain ...
+});
+```
+
+
+
+Sebelum memperbaiki pengujiannya, alangkah baiknya kita coba dulu pull request dengan skenario gagal seperti ini. Hal tersebut supaya kita mengetahui apa yang terjadi jika Anda atau anggota tim melakukan pull request dengan pengujian yang gagal.
+
+Silakan commit dan push perubahan ke branch feature-say-hello-world ke remote repository dengan menggunakan perintah:
+
+
+
+```bash
+git add .
+git commit -m "add say hello world test case"
+git push origin feature-say-hello-world 
+```
+
+
+
+Sekarang kembali ke halaman GitHub repository Auth API Anda. Seharusnya terdapat branch baru yaitu feature-say-hello-world.
+
+Buat pull request dengan klik tombol **View all branches**.
+
+Kemudian pada halaman daftar branches, buat pull request baru dengan klik tombol **New pull request** dari branch **feature-say-hello-world**.
+
+Secara default pull request akan dilakukan dari branch feature-say-hello-world ke branch master (utama).
+
+Biarkan konfigurasi tetap seperti default dan klik **Create pull request** untuk mulai membuat pull request.
+
+Setelah pull request berhasil dibuat, maka actions CI akan berjalan seperti pada gambar di atas.
+
+Karena kita melakukan pull request dengan hasil pengujian yang gagal, maka CI pun akan memberitahukan bahwa proses pengujiannya gagal.
+
+Dari sini kita tahu bahwa kode yang di PR oleh Anda atau tim tidaklah benar. Detail kesalahan yang terjadi dapat dilihat dengan klik tautan **Details**.
+
+Kembali ke halaman pull request. Karena proses pengujian pada CI gagal, reviewer bisa langsung close atau menolak pull request dengan klik tombol **Close pull request**.
+
+Sekarang, kita coba perbaiki dengan membuat pengujiannya hijau.
+
+Silakan buka kembali VSCode dan buat pengujiannya menjadi hijau dengan menuliskan kode yang diberi tanda tebal pada fungsi createServer:
+
+- [createServer.js](https://www.dicoding.com/academies/276/tutorials/19067?from=19062#tab3-code1)
+
+```js
+const Hapi = require('@hapi/hapi');
+const ClientError = require('../../Commons/exceptions/ClientError');
+const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
+const users = require('../../Interfaces/http/api/users');
+const authentications = require('../../Interfaces/http/api/authentications');
+ 
+const createServer = async (injections) => {
+  const server = Hapi.server({
+    host: process.env.HOST,
+    port: process.env.PORT,
+  });
+ 
+  await server.register([
+    {
+      plugin: users,
+      options: { injections },
+    },
+    {
+      plugin: authentications,
+      options: { injections },
+    },
+  ]);
+ 
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      value: 'Hello world!',
+    }),
+  });
+ 
+  server.ext('onPreResponse', (request, h) => {
+    // mendapatkan konteks response dari request
+    const { response } = request;
+ 
+    if (response instanceof Error) {
+      // bila response tersebut error, tangani sesuai kebutuhan
+      const translatedError = DomainErrorTranslator.translate(response);
+ 
+      // penanganan client error secara internal.
+      if (translatedError instanceof ClientError) {
+        const newResponse = h.response({
+          status: 'fail',
+          message: translatedError.message,
+        });
+        newResponse.code(translatedError.statusCode);
+        return newResponse;
+      }
+ 
+      // mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.
+      if (!translatedError.isServer) {
+        return h.continue;
+      }
+ 
+      // penanganan server error sesuai kebutuhan
+      const newResponse = h.response({
+        status: 'error',
+        message: 'terjadi kegagalan pada server kami',
+      });
+      newResponse.code(500);
+      return newResponse;
+    }
+ 
+    // jika bukan error, lanjutkan dengan response sebelumnya (tanpa terintervensi)
+    return h.continue;
+  });
+ 
+  return server;
+};
+```
+
+Jalankan testing dan hasilnya akan hijau:
+
+
+
+Kita commit perubahan dan push kembali branch **feature-say-hello-world** ke remote repository menggunakan perintah:
+
+```js
+git add .
+git commit -m "pass say hello world test case"
+git push origin feature-say-hello-world
+```
+
+Kembali ke GitHub Repository. Sekarang kita buat pull request lagi dengan cara yang sama yaitu *View all branches* -> *New pull request* pada branch *feature-say-hello-world*.
+
+Klik **Create pull request** untuk mulai membuat pull request baru.
+
+Setelah pull request berhasil dibuat, tunggu proses CI hingga selesai dan lolos.
+
+Proses CI selesai dan lulus. Sehingga, reviewer bisa merge pull request dengan aman. Namun, sebelum melakukan merge pull request, kita buat dulu CD pipeline agar perubahan kode langsung bisa di-deploy secara otomatis ke server EC2.

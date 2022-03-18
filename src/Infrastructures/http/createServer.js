@@ -2,7 +2,8 @@ const Hapi = require('@hapi/hapi');
 const ClientError = require('../../Commons/exceptions/ClientError');
 const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
 const users = require('../../Interfaces/http/api/users');
- 
+// const authentications = require('../../Interfaces/http/api/authentications');
+
 const createServer = async (container) => {
   const server = Hapi.server({
     host: process.env.HOST,
@@ -14,8 +15,20 @@ const createServer = async (container) => {
       plugin: users,
       options: { container },
     },
+   /*  {
+      plugin: authentications,
+      options: { container },
+    }, */
   ]);
   
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      value: 'Hello world!',
+    }),
+  });
+
   server.ext('onPreResponse', (request, h) => {
     // mendapatkan konteks response dari request
     const { response } = request;
